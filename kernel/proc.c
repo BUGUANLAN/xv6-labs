@@ -127,6 +127,8 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
+  p->kama_syscall_trace = 0; // 系统调用跟踪码初始化
+
   return p;
 }
 
@@ -296,6 +298,8 @@ fork(void)
   np->state = RUNNABLE;
 
   release(&np->lock);
+
+  np->kama_syscall_trace = p->kama_syscall_trace; // 继承系统调用跟踪码
 
   return pid;
 }
