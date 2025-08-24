@@ -103,4 +103,11 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+
+  // 时钟相关
+  int kama_alarm_interval; // 闹钟间隔
+  void (*kama_alarm_handler)(void); // 闹钟回调处理函数
+  int kama_alarm_ticks; // 当前时钟信号数
+  struct trapframe *kama_alarm_trapframe; // 保存闹钟中断触发时的trapframe,用于恢复进程中断前的状态
+  int kama_alarm_goingoff; // 是否有一个时钟中断正在执行且还未返回
 };

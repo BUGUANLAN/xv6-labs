@@ -77,8 +77,16 @@ usertrap(void)
     exit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
+  if(which_dev == 2) {
+    if(p->kama_alarm_interval !=0 && --p->kama_alarm_ticks <= 0 && p->kama_alarm_goingoff==0){
+      // 触发闹钟
+      p->kama_alarm_ticks = p->kama_alarm_interval; // 重置闹钟计数器
+      *p->kama_alarm_trapframe = *p->trapframe; // 备份当前的trapframe
+      p->trapframe->epc = (uint64)(p->kama_alarm_handler); // 设置trapframe的epc为闹钟处理函数地址
+      p->kama_alarm_goingoff = 1; // 标记已有时钟正在执行
+    }
     yield();
+  }
 
   usertrapret();
 }
@@ -216,5 +224,21 @@ devintr()
   } else {
     return 0;
   }
+}
+
+int kama_sigalarm(int ticks, void (*handler)(void)){
+  struct proc *p = myproc();
+  p->kama_alarm_interval = ticks;
+  p->kama_alarm_handler = handler;
+  p->kama_alarm_ticks = ticks;
+  return 0;
+}
+
+int kama_sigreturn(void){
+  struct proc *p = myproc();
+  // 恢复中断前的trapframe
+  *(p->trapframe) = *(p->kama_alarm_trapframe);
+  p->kama_alarm_goingoff = 0;
+  return 0;
 }
 
